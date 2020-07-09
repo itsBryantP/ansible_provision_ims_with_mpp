@@ -1,6 +1,8 @@
 ---
 # tasks file for deprovision-ims-dbdc
 - name:  Deprovision IMS
+  collections:
+    - ibm.ibm_zos_core
   block:
     # TODO: add task to search for ports in use by IMS with this SSID and then remove reservation
     # * Need this because Ansible lazily interprets role_path
@@ -19,16 +21,18 @@
     #     datasets: '{{ desired_install_job_save_locations.deprovision }}'
 
     - name: Stop MPP Regions
-      submit_jcl:
-        name: STOPMPP.j2
-        path: '{{ uss_file_path }}'
+      zos_job_submit:
+        src: '{{ uss_file_path }}/STOPMPP.j2'
+        location: USS
+        wait: true
         max_rc: 12
       ignore_errors: yes
 
     - name: Stop JMP Regions
-      submit_jcl:
-        name: STOPJMP.j2
-        path: '{{ uss_file_path }}'
+      zos_job_submit:
+        src: '{{ uss_file_path }}/STOPJMP.j2'
+        location: USS
+        wait: true
         max_rc: 12
       ignore_errors: yes
       
@@ -49,77 +53,64 @@
             ims_up: no
 
     - name: Stop all IMS resources
-      submit_jcl:
-        name: DFSSTPRS.j2
-        path: '{{ uss_file_path }}'
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSSTPRS.j2'
+        location: USS
+        wait: true
         max_rc: 8
       when: ims_up
 
     - name: Immediate IMS Shutdown
-      submit_jcl:
-        name: DFSISHUT.j2
-        path: '{{ uss_file_path }}'
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSISHUT.j2'
+        location: USS
+        wait: true
         max_rc: 12
       when: ims_up
 
     - name: Stop ICON
-      submit_jcl:
-        name: DFSSTPIC.j2
-        path: '{{ uss_file_path }}'
-        reuse_script: yes
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSSTPIC.j2'
+        location: USS
+        wait: true
         max_rc: 8
-      register: response
 
 
     - name: Stop OM
-      submit_jcl:
-        name: DFSSTPOM.j2
-        path: '{{ uss_file_path }}'
-        script_path: '{{ response.script_path }}'
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSSTPOM.j2'
+        location: USS
+        wait: true
 
     - name: Stop RM
-      submit_jcl:
-        name: DFSSTPRM.j2
-        path: '{{ uss_file_path }}'
-        script_path: '{{ response.script_path }}'
+      zos_job_submit: 
+        src: '{{ uss_file_path }}/DFSSTPRM.j2'
+        location: USS
+        wait: true
 
     - name: Stop CSL
-      submit_jcl:
-        name: DFSSTPAS.j2
-        path: '{{ uss_file_path }}'
-        script_path: '{{ response.script_path }}'
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSSTPAS.j2'
+        location: USS
+        wait: true
 
     - name: Delete Sysdef libs
-      submit_jcl:
-        name: DFSSYSDL.j2
-        path: '{{ uss_file_path }}'
-        script_path: '{{ response.script_path }}'
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSSYSDL.j2'
+        location: USS
+        wait: true
 
     - name: Delete IMS Runtime Libs
-      submit_jcl:
-        name: DFSDELLB.j2
-        path: '{{ uss_file_path }}'
-        script_path: '{{ response.script_path }}'
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSDELLB.j2'
+        location: USS
+        wait: true
 
     - name: Delete IMS Catalog
-      submit_jcl:
-        name: DFSDCTLG.j2
-        path: '{{ uss_file_path }}'
-        script_path: '{{ response.script_path }}'
-
-    # - name: Unauth IMS Libs
-    #   submit_jcl:
-    #     name: ?.j2
-    #     path: '{{ uss_file_path }}'
-    #     script_path: '{{ response.script_path }}'
-
-
-    # - name: Delete IMS Services
-    #   submit_jcl:
-    #     name: ?.j2
-    #     path: '{{ uss_file_path }}'
-    #     script_path: '{{ response.script_path }}'
-
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSDCTLG.j2'
+        location: USS
+        wait: true
 
     - name:  Delete IEFJOBS members
       include_role:
@@ -130,14 +121,7 @@
         max_rc: 0
 
     - name: Clean proclib
-      submit_jcl:
-        name: DFSDLMBR.j2
-        path: '{{ uss_file_path }}'
-        script_path: '{{ response.script_path }}'
-
-  always:
-    - name: Delete the temporary submit_jcl script path
-      file:
-          path: "{{ response.script_path }}"
-          state: absent
-      when: response
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSDLMBR.j2'
+        location: USS
+        wait: true
