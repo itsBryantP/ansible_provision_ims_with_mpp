@@ -1,0 +1,11 @@
+- name: Authenticate with firewall
+  hosts: cluster_master
+  gather_facts: false
+  vars_files:
+    - "{{ vars_folder_name }}/auth.yml"
+  environment:
+    # * Pipelining can break sudo if requiretty is set to true on target node, disable since we use become
+    ANSIBLE_SSH_PIPELINING: 0
+
+  roles:
+    - authenticate-with-firewall

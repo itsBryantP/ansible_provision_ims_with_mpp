@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+<copyright
+ notice="cics-lm-source-program"
+ pids="5655-Y04"
+ years="2017"
+ crc="2342803383" >
+
+
+ Licensed Materials - Property of IBM
+
+ 5655-Y04
+
+ (C) Copyright IBM Corp. 2017 All Rights Reserved.
+
+ US Government Users Restricted Rights - Use, duplication or
+ disclosure restricted by GSA ADP Schedule Contract with
+ IBM Corp.
+
+ @{[**]copyright.years=2017}
+
+ </copyright>
+-->
+<server>
+
+    <featureManager>
+		<feature>appSecurity-2.0</feature>
+		<feature>zosSecurity-1.0</feature>
+    </featureManager>
+
+    <!-- Fail over to basic authentication -->
+	<webAppSecurity allowFailOverToBasicAuth="true"/>
+
+	<!-- Saf registry definition -->
+	<safRegistry id="saf" realm="zosConnect"/>
+	<safAuthorization id="saf2" racRouteLog="ASIS" />
+
+</server>

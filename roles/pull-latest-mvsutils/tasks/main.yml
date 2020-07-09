@@ -1,0 +1,32 @@
+---
+# tasks file for install-mvs-utilities
+- name: Get name of latest mvsutil release
+  uri:
+    url: https://na.artifactory.swg-devops.com/artifactory/api/storage/sys-mvsutils-mvsutil-generic-local?lastModified
+    return_content: yes
+    body_format: json
+    validate_certs: no
+    headers:
+      X-JFrog-Art-Api: '{{ api_key }}'
+  register: mvsutil_latest_release_url
+
+- name: find the version number for mvsutil 
+  set_fact:
+    mvsutil_version: "{{ mvsutil_latest_release_url.json.uri | regex_search('mvsutil\\_([0-9]+)\\.pax', '\\1') | last }}"
+
+- name: Get latest version of mvsutil
+  get_url:
+    url: https://na.artifactory.swg-devops.com:443/artifactory/sys-mvsutils-mvsutil-generic-local/{{ mvsutil_version }}/mvsutil_{{ mvsutil_version }}.pax
+    dest: '{{ uss_utilities_path }}/mvsutil_{{ mvsutil_version }}.pax'
+    validate_certs: no
+    headers: X-JFrog-Art-Api:{{ api_key }}
+    mode: 0644
+  register: mvsutil_file_status
+
+
+- name: Unzip the mvsutil archive
+  shell: pax -p e -rf mvsutil_{{ mvsutil_version }}.pax
+  args:
+    executable: /usr/lpp/rsusr/ported/bin/bash
+    chdir: '{{ uss_utilities_path }}/'
+  when: mvsutil_file_status.changed

@@ -1,0 +1,39 @@
+---
+# tasks file for provision-mpp
+# * Need this because Ansible lazily interprets role_path
+# * Results in wrong paths being sent when passing vars that use role_path var
+- name: Provision MPP Region
+  collections:
+    - ibm.ibm_zos_core
+
+  block:
+    - set_fact:
+        eager_role_path: '{{role_path}}'
+
+    - name: Send templated jobs for MPP
+      include_role: 
+        name: send-templates
+      vars:
+        template_path: '{{eager_role_path}}/templates/*'
+
+    - name: Copy tailored DFSMPR proc to PROCLIB   
+      zos_job_submit:
+        src: '{{ uss_file_path }}/CRE_DFSMPR.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+      when: SEND_CUSTOM_DFSMPR
+
+    - name: Create exec job for MPP
+      zos_job_submit:
+        src: '{{ uss_file_path }}/CRE_MPP_EXEC.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+    - name: Start the MPP region
+      zos_job_submit:
+        src: '{{ uss_file_path }}/STARTMPP.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30

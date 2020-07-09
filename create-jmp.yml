@@ -1,0 +1,29 @@
+- name: Create JMP region
+  hosts: zsystem
+  gather_facts: false
+  # * Include different variable files depending on environment/inventory used
+  vars_files:
+    - "{{ vars_folder_name }}/ims-jmp.yml"
+  environment: '{{ system_environment }}'
+
+  tasks:
+    - name: Create temporary directory to store provisioning files
+      tempfile:
+        state: directory
+      register: jmp_tmp_dir
+
+    - block:
+        - include_role: 
+            name: install-bzip2
+
+        - include_role:
+            name: provision-jmp
+      
+      always:
+        - name: Delete the temporary provision files directory
+          file:
+            path: "{{ jmp_tmp_dir.path }}"
+            state: absent
+      vars:
+        uss_file_path: '{{ jmp_tmp_dir.path }}' 
+        # uss_utilities_path: '{{ jmp_tmp_dir.path }}' 

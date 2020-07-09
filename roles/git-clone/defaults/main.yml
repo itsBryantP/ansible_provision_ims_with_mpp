@@ -1,0 +1,35 @@
+---
+# defaults file for git-clone
+
+# Name of the SSH key
+KEY_TITLE: "git_ssh_key"
+
+SSH_CONF_PATH: "~/.ssh"
+
+# Location of the SSH key to be stored
+KEY_PATH: "{{SSH_CONF_PATH}}/id_rsa_git"
+
+# GitHub personal access token
+GITHUB_ACCESS_TOKEN: !vault |
+          $ANSIBLE_VAULT;1.2;AES256;asif
+          34653561363364653235346238303332336538633132636135313736633965613832313537383064
+          6163393037633431656561383330313536353833353238360a393731633061326435626331373864
+          66303033373064613430346237646264623434356139333064633036646163663631633566656165
+          6634626531336335660a656262636137336462343462333135393263333139656530633633613735
+          30363063303534656639333339393430303631663161376461633235643439356531663532663339
+          6630633337363031633530636564323138303362383037333066
+
+# Git repository to be cloned. Must be SSH (not Https)
+GIT_REPO: ssh://git@github.ibm.com/IBMZSoftware/nazare-demo-imsapp.git
+
+GIT_BRANCH: ansible-imsbank
+
+# Directory where the repository will be cloned
+CLONE_DEST: "/u/{{ TARGET_USERNAME }}/nazare-demo-imsapp"
+
+# Location of the SSH known hosts file
+KNOWN_HOSTS_PATH: "{{SSH_CONF_PATH}}/known_hosts"
+
+# Location of the git binary
+GIT_EXECUTABLE: /usr/lpp/rsusr/ported/bin/git
+#git_path: /usr/bin/git

@@ -1,0 +1,204 @@
+/* REXX */
+/***********************************************************************/
+/*                                                                     */
+/* <copyright                                                          */
+/*     notice="cics-rm-source"                                         */
+/*     pids="5655-CI1"                                                 */
+/*     years="2017"                                                    */
+/*     crc="3316400273" >                                              */
+/*                                                                     */
+/*                                                                     */
+/*     Licensed Materials - Property of IBM                            */
+/*                                                                     */
+/*     "Restricted Materials of IBM"                                   */
+/*                                                                     */
+/*     5655-CI1                                                        */
+/*                                                                     */
+/*     (C) Copyright IBM Corp. 2017                                    */
+/*                                                                     */
+/*     @{[**]copyright.years=2017}                                     */
+/*                                                                     */
+/*                                                                     */
+/*     </copyright>                                                    */
+/*                                                                     */
+/***********************************************************************/
+/***********************************************************************/
+/* Define dynamic security profiles for the server                     */
+/***********************************************************************/
+/***********************************************************************/
+/* Setup the STARTED task for this server                              */
+/***********************************************************************/
+Say "Defining STARTED task for the server"
+address tso
+"RDEF STARTED {{softwareServiceInstanceName}}.* UACC(NONE) STDATA(USER({{ZCON_ADMIN_SERVER}}) PRIVILEGED(NO) TRUSTED(NO) TRACE(YES))"
+ if RC <> 0 then do
+    exit RC
+ end
+
+/***********************************************************************/
+/* Setup the APPL class profile                                        */
+/***********************************************************************/
+Say "Define the server specific APPLID to RACF"
+
+"RDEFINE APPL {{softwareServiceInstanceName}} UACC(NONE)"
+ if RC <> 0 then do
+    exit RC
+ end
+
+Say "Activating the APPL class"
+/* If not active, the domain is not restricted, which means anyone can authenticate to it */
+"SETROPTS CLASSACT(APPL)"
+ if RC <> 0 then do
+    exit RC
+ end
+
+Say "Grant the server id READ access to the profile in the APPL class"
+"PERMIT {{softwareServiceInstanceName}} CLASS(APPL) ACCESS(READ) ID({{ZCON_ADMIN_SERVER}})"
+ if RC <> 0 then do
+    exit RC
+ end
+
+Say "Grant an unauthenticated {{ ZCON_ZOS_GUEST_USER }} user ID READ access to the profile in the APPL class"
+"PERMIT {{softwareServiceInstanceName}} CLASS(APPL) ACCESS(READ) ID({{ ZCON_ZOS_GUEST_USER }})"
+ if RC <> 0 then do
+    exit RC
+ end
+
+/***********************************************************************/
+/* Configure a security domain for server auth                         */
+/***********************************************************************/
+
+Say "Create the security domain for the server"
+"RDEFINE SERVER BBG.SECPFX.{{softwareServiceInstanceName}} UACC(NONE)"
+
+Say "Grant the servers id READ access to the security domain for the server"
+"PERMIT BBG.SECPFX.{{softwareServiceInstanceName}} CLASS(SERVER) ACCESS(READ) ID({{ZCON_ADMIN_SERVER}})"
+ if RC <> 0 then do
+    exit RC
+ end
+
+/***********************************************************************/
+/* Grant the server access to the angel process                        */
+/***********************************************************************/
+
+Say "Define the class for the angel process"
+"RDEFINE SERVER bbg.angel UACC(NONE)"
+
+Say "Permitting the server access to the angel process"
+"PERMIT bbg.angel CLASS(SERVER) ACCESS(READ) ID({{ZCON_ADMIN_SERVER}})"
+ if RC <> 0 then do
+    exit RC
+ end
+
+/***********************************************************************/
+/* Grant the server access to use the z/OS Authorized services         */
+/***********************************************************************/
+
+Say "Create a SERVER profile for the authorized module BBGZSAFM"
+"RDEFINE SERVER bbg.authmod.bbgzsafm UACC(NONE)"
+
+Say "Permit the servers id READ access to the authorized module BBGZSAFM"
+"PERMIT bbg.authmod.bbgzsafm CLASS(SERVER) ACCESS(READ) ID({{ZCON_ADMIN_SERVER}})"
+ if RC <> 0 then do
+    exit RC
+ end
+
+Say "Create a profile for the SAF authorized user registry services and SAF authorization services"
+"RDEFINE SERVER bbg.authmod.bbgzsafm.safcred UACC(NONE)"
+
+Say "Permit the servers id READ access to the SAF authorized user registry services and SAF authorization services"
+"PERMIT bbg.authmod.bbgzsafm.safcred CLASS(SERVER) ACCESS(READ) ID({{ZCON_ADMIN_SERVER}})"
+ if RC <> 0 then do
+    exit RC
+ end
+
+Say "Create a profile for the SVCDUMP services"
+"RDEFINE  SERVER bbg.authmod.bbgzsafm.zosdump UACC(NONE)"
+
+Say "Permit the servers id READ access to the SVCDUMP services"
+"PERMIT bbg.authmod.bbgzsafm.zosdump CLASS(SERVER) ACCESS(READ) ID({{ZCON_ADMIN_SERVER}})"
+ if RC <> 0 then do
+    exit RC
+ end
+
+Say "Create profiles for the optimized local adapter authorized service"
+"RDEFINE  SERVER bbg.authmod.bbgzsafm.localcom UACC(NONE)"
+"RDEFINE  SERVER bbg.authmod.bbgzsafm.wola UACC(NONE)"
+
+Say "Permit the servers id READ access to the optimized local adapter authorized service"
+"PERMIT bbg.authmod.bbgzsafm.localcom CLASS(SERVER) ACCESS(READ) ID({{ZCON_ADMIN_SERVER}})"
+ if RC <> 0 then do
+    exit RC
+ end
+"PERMIT bbg.authmod.bbgzsafm.wola CLASS(SERVER) ACCESS(READ) ID({{ZCON_ADMIN_SERVER}})"
+ if RC <> 0 then do
+    exit RC
+ end
+
+Say "Create a SERVER profile for the authorized module BBGZSCFM"
+"RDEFINE SERVER bbg.authmod.bbgzscfm UACC(NONE)"
+
+Say "Permit the servers id READ access to the authorized module BBGZSCFM"
+"PERMIT bbg.authmod.bbgzscfm CLASS(SERVER) ACCESS(READ) ID({{ZCON_ADMIN_SERVER}})"
+ if RC <> 0 then do
+    exit RC
+ end
+
+Say "Create profiles for the optimized local adapter authorized client service"
+"RDEFINE  SERVER bbg.authmod.bbgzscfm.wola UACC(NONE)"
+
+Say "Permit the servers id READ access to the optimized local adapter authorized client service"
+"PERMIT bbg.authmod.bbgzscfm.wola CLASS(SERVER) ACCESS(READ) ID({{ZCON_ADMIN_SERVER}})"
+ if RC <> 0 then do
+    exit RC
+ end
+
+Say "Create a profile for WLM services"
+"RDEFINE  SERVER bbg.authmod.bbgzsafm.zoswlm UACC(NONE)"
+
+Say "Permit the servers id READ access to the WLM services"
+"PERMIT bbg.authmod.bbgzsafm.zoswlm CLASS(SERVER) ACCESS(READ) ID({{ZCON_ADMIN_SERVER}})"
+ if RC <> 0 then do
+    exit RC
+ end
+
+Say "Create a profile for the TXRRS services"
+"RDEFINE  SERVER bbg.authmod.bbgzsafm.txrrs UACC(NONE)"
+
+Say "Permit the servers id READ access to the TXRRS services"
+"PERMIT bbg.authmod.bbgzsafm.txrrs CLASS(SERVER) ACCESS(READ) ID({{ZCON_ADMIN_SERVER}})"
+ if RC <> 0 then do
+    exit RC
+ end
+
+Say "Create a profile for the IFAUSAGE services (PRODMGR)"
+"RDEFINE  SERVER bbg.authmod.bbgzsafm.prodmgr UACC(NONE)"
+
+Say "Permit the servers id READ access to the IFAUSAGE services (PRODMGR)"
+"PERMIT bbg.authmod.bbgzsafm.prodmgr CLASS(SERVER) ACCESS(READ) ID({{ZCON_ADMIN_SERVER}})"
+ if RC <> 0 then do
+    exit RC
+ end
+
+/***********************************************************************/
+/* Setup user authorization to access the z/OS Connect application by  */
+/* assigning users the zosConnectAccess role                           */
+/***********************************************************************/
+
+Say "Defining the z/OS Connect access role class"
+"RDEFINE EJBROLE BBGZDFLT.zos.connect.access.roles.zosConnectAccess UACC(NONE)"
+
+Say "Permitting the provisioning userid to the z/OS Connect access role class"
+
+"PERMIT BBGZDFLT.zos.connect.access.roles.zosConnectAccess CLASS(EJBROLE) ID({{workflowOwner}}) ACCESS(READ)"
+ if RC <> 0 then do
+    exit RC
+ end
+
+/* Refresh */
+"SETROPTS RACLIST(FACILITY) REFRESH"
+"SETROPTS RACLIST(APPL) REFRESH"
+"SETROPTS RACLIST(EJBROLE) REFRESH"
+"SETROPTS RACLIST(SERVER) GENERIC(SERVER) REFRESH"
+"SETROPTS RACLIST(STARTED) REFRESH"
+exit 0

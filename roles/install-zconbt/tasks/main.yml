@@ -1,0 +1,29 @@
+---
+# tasks file for install-zconbt
+
+# TODO: Determine how variable names should be scoped, should "install_path" reference a different context?
+# TODO: Add defaults once above determined
+- name: Check if zconbt available for install
+  stat:
+    path: '{{ role_path }}/files/{{ zconbt_compressed_name }}'
+  register: zconbt_available
+  delegate_to: localhost
+
+- name: Check if zconbt already on target
+  stat:
+    path: "{{ install_path }}/bin/zconbt"
+  register: zconbt_installed
+
+- name: Copy and extract zconbt
+  block:
+  - name: Copy zconbt
+    copy:
+      src: '{{ role_path }}/files/{{ zconbt_compressed_name }}'
+      dest: '{{ install_path }}/{{ zconbt_compressed_name}}' # extracts to bin folder
+
+  - name: Extract extract on target
+    shell: '{{ utility_path }}/bzip2 -df {{ zconbt_compressed_name }}; tar -Co . -xf zconbt.tar; rm zconbt.tar'   # ; mv ./bin/zconbt* . ; rmdir ./bin 2>/dev/null'
+    args:
+      chdir: '{{ install_path }}'
+
+  when: zconbt_available.stat.exists and not zconbt_installed.stat.exists

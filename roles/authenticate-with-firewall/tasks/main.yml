@@ -1,0 +1,39 @@
+---
+# tasks file for authenticate-with-firewall
+- name: Create temporary directory to store provisioning files
+  tempfile:
+    state: directory
+  register: auth_tmp_dir
+
+- name: Authenticate with firewall
+  block:
+    # * Need this because Ansible lazily interprets role_path
+    # * Results in wrong paths being sent when passing vars that use role_path var
+    - set_fact:
+        eager_role_path: '{{role_path}}'
+
+    - name: Copy auth script to temp dir on host
+      template: 
+        src: '{{ eager_role_path }}/files/firewall-auth.exp'
+        dest: '{{ auth_tmp_dir.path }}/firewall-auth.exp'
+        mode: a+x
+
+    - name: Install expect if not already 
+      package:
+        name: '{{ item }}' 
+        state: present
+      loop:
+        - expect
+        - telnet
+
+    - name: Run auth script with our parameters
+      shell: expect -f firewall-auth.exp '{{ auth_uri }}' '{{ auth_user }}' '{{ auth_pass }}'
+      args:
+        chdir: '{{ auth_tmp_dir.path }}'
+      # no_log: true
+
+  always:
+    - name: Delete the temporary auth script directory
+      file:
+        path: "{{ auth_tmp_dir.path }}"
+        state: absent

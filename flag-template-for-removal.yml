@@ -1,0 +1,10 @@
+- name: Flag template for removal
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - "host_vars/native.yml"
+  environment:
+    ANSIBLE_SSH_PIPELINING: 0
+
+  roles:
+    - flag-template-for-removal

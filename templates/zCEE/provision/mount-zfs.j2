@@ -1,0 +1,89 @@
+#
+# <copyright
+#     notice="cics-lm-source"
+#     pids="5655-CI1"
+#     years="2017"
+#     crc="1408306984" >
+#
+#
+#     Licensed Materials - Property of IBM
+#
+#     5655-CI1
+#
+#     (C) Copyright IBM Corp. 2017 All Rights Reserved.
+#
+#     @{[**]copyright.years=2017}
+#
+#
+#     </copyright>
+#
+#   STATUS = @STATUS@
+#
+# FILE : mount-zfs.script
+#
+#
+
+
+# Query information about the main mountpoint
+df_out=$(df {{ZCON_ZFS_MOUNTPOINT}})
+
+echo "df_out set to $df_out"
+
+# Split to obtain the data set for the mount point
+dataset=$(echo $df_out | sed -e 's/.*(//' | sed -e 's/).*//')
+
+echo "dataset set to $dataset"
+
+# Using the data set restrict using grep in the mount -qv comment
+mount_info=$(mount -qv {{ZCON_ZFS_MOUNTPOINT}} | grep $dataset)
+
+echo "mount_info set to $mount_info"
+
+# Look at the 5 byte to work out what to do next
+parent_mount=$(expr substr "$mount_info" 5 1)
+
+echo "parent_mount set to $parent_mount"
+
+# Decide the automount value
+case $parent_mount in
+   "A")
+       echo "Automount (yes)"
+       mountvalue="yes"
+       ;;
+   "U")
+       echo "Unmount (unmount)"
+       mountvalue="unmount"
+       ;;
+   "-")
+       echo "NoAutomount (no)"
+       mountvalue="no"
+       ;;
+esac
+
+echo "mountvalue $mountvalue"
+
+echo "Running command: mount -t ZFS -a $mountvalue -f {{ZCON_FILE_SYSTEM_HLQ}}.{{softwareServiceInstanceName}} {{ZCON_ZFS_MOUNTPOINT}}/{{softwareServiceInstanceName}}"
+
+mount -t ZFS -a $mountvalue -f {{ZCON_FILE_SYSTEM_HLQ}}.{{softwareServiceInstanceName}} {{ZCON_ZFS_MOUNTPOINT}}/{{softwareServiceInstanceName}}
+rc=$?
+if [ $rc -gt 0 ]; then
+  echo "Failed to mount the directory see STDERR with RC $rc"
+  exit $rc
+fi
+
+echo "Creating directories / files"
+
+mkdir {{ZCON_ZFS_MOUNTPOINT}}/{{softwareServiceInstanceName}}/.tmp_server
+mkdir {{ZCON_ZFS_MOUNTPOINT}}/{{softwareServiceInstanceName}}/.tmp_user
+mkdir {{ZCON_ZFS_MOUNTPOINT}}/{{softwareServiceInstanceName}}/PROVISION_OK
+{% if ZCON_ZFS_GROUP != '' and ZCON_ZFS_GROUP %}
+chmod 775 {{ZCON_ZFS_MOUNTPOINT}}/{{softwareServiceInstanceName}}
+chown {{ZCON_ADMIN_SERVER}}:{{ZCON_ZFS_GROUP}} {{ZCON_ZFS_MOUNTPOINT}}/{{softwareServiceInstanceName}}
+{% else %}
+chmod 755 {{ZCON_ZFS_MOUNTPOINT}}/{{softwareServiceInstanceName}}
+{% if ZCON_ADMIN_SERVER != ZCON_ADMIN_ZFS %}
+chown {{ZCON_ADMIN_SERVER}} {{ZCON_ZFS_MOUNTPOINT}}/{{softwareServiceInstanceName}}
+{% endif %}
+{% endif %}
+chown {{ZCON_ADMIN_TSO}} {{ZCON_ZFS_MOUNTPOINT}}/{{softwareServiceInstanceName}}/.tmp_server
+chown {{workflowOwner}} {{ZCON_ZFS_MOUNTPOINT}}/{{softwareServiceInstanceName}}/.tmp_user

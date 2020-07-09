@@ -1,0 +1,28 @@
+---
+# tasks file for deploy-python36-from-artifactory
+- name: Create dir to store files
+  raw: mkdir -p {{ copy_dir }} {{ '; mkdir -p {0}'.format(install_dir) if install_dir != copy_dir else ''}}
+
+- name: Download python 3.6 from artifactory
+  raw: '{{ curl }} --insecure -s -S \
+  -H "X-JFrog-Art-Api: {{ api_key }}" \
+  https://na.artifactory.swg-devops.com/artifactory/sys-ims-cloudnative-team-python-generic-local/python/python-2017-04-12-py36.tar.gz \
+  -o {{ copy_dir }}/{{ python_file_name }}.tgz'
+
+- name: Decompress python install tar
+  raw: '{{ gzip }} -d {{ copy_dir }}/{{ python_file_name }}.tgz'
+  
+- name: Untar python install 
+  raw: tar -xUXf {{ copy_dir }}/{{ python_file_name }}.tar -Co {{ install_dir }}
+
+- name: Run install packages
+  raw: >
+    export _BPXK_AUTOCVT=ON ;
+    export BASH_PREFIX=/usr/lpp/rsusr/ported ; 
+    export PERL_PREFIX=/usr/lpp/rsusr/ported ; 
+    export RELEASE_NAME={{ python_release_name }} ; 
+    export RELEASE_TYPE={{ python_release_type }} ;
+    export INSTALL={{ install_dir }} ;
+    export RELEASE_DIR=$INSTALL/{{ python_file_name }} ;
+    export PKGS_BASE=$RELEASE_DIR/pkgs ;
+    {{ install_dir }}/{{ python_file_name }}/python36/bin/install_all_packages

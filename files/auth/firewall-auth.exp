@@ -1,0 +1,43 @@
+#!/usr/local/bin/expect -f
+
+
+set uri [lindex $argv 0]
+set username [lindex $argv 1]
+set password [lindex $argv 2]
+
+
+set force_conservative 1  ;# set to 1 to force conservative mode even if
+                          ;# script wasn’t run conservatively originally
+if {$force_conservative} {
+        set send_slow {1 .1}
+        proc send {ignore arg} {
+                sleep .1
+                exp_send -s -- $arg
+        }
+}
+set timeout 5
+
+spawn telnet $uri
+expect { 
+	timeout { exit 0 }
+	"Username: "
+}
+sleep 2
+send -- "$username\r"
+
+expect {
+	timeout { exit 1 }
+	"Password: "
+}
+sleep 2
+send -- "$password\r"
+
+expect {
+	timeout { exit 1 }
+	"ENTER USERID"
+}
+sleep 1
+send -- "^\]\r"
+expect -exact "telnet> "
+send -- "quit\r"
+expect eof

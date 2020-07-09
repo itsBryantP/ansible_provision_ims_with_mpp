@@ -1,0 +1,174 @@
+---
+# tasks file for provision-ims-dbdc
+- name: Provision IMS
+  collections:
+    - ibm.ibm_zos_core
+
+  block:
+    # TODO: add option to reserve specific ports
+    - name: Reserve ports for ICON
+      block:
+
+        - name: When specific ports are desired
+          block:
+            - name: Reserve ICON HTTP Port
+              zport:
+                name: '*'
+                port: '{{ DFS_REGION_TCPIPPORT if RESERVE_SPECIFIC_PORT else None | default(omit) }}'
+                dsname: '{{ TCPIP_PROFILE }}'
+                tmp_dsname: '{{ TCPIP_PROFILE_TMP }}'
+                tcp: yes
+              register: port_alloc_result1
+
+            - name: Reserve ICON SSL Port
+              zport:
+                name: '*'
+                port: '{{ DFS_REGION_SSLTCPIPPORT if RESERVE_SPECIFIC_PORT else None | default(omit) }}'
+                dsname: '{{ TCPIP_PROFILE }}'
+                tmp_dsname: '{{ TCPIP_PROFILE_TMP }}'
+                tcp: yes
+              register: port_alloc_result2
+
+        - set_stats:
+            data:
+              DFS_REGION_TCPIPPORT: '{{ port_alloc_result1.port }}' 
+              # DFS_PORTID: '{{ port_alloc_result1.port_id }}' 
+              DFS_REGION_SSLTCPIPPORT: '{{ port_alloc_result2.port }}' 
+              # DFS_SSLPORTID: '{{ port_alloc_result2.port_id }}' 
+      when: DYNAMICALLY_RESERVE_PORTS
+
+    # * Need this because Ansible lazily interprets role_path
+    # * Results in wrong paths being sent when passing vars that use role_path var
+    - set_fact:
+        eager_role_path: '{{role_path}}'
+
+    - include_role: 
+        name: send-templates
+      vars:
+        template_path: '{{ eager_role_path }}/templates/provision/*'
+
+    # - name: Allocate work dataset zCloud IMS
+    #   submit_jcl:
+    #       name: DFSALWRK.j2 
+    #       path: '{{ uss_file_path }}'
+    #       reuse_script: yes
+    #   register: response
+    
+    - name: Allocate work dataset zCloud IMS
+      zos_job_submit:
+          src: '{{ uss_file_path }}/DFSALWRK.j2'
+          location: USS
+          wait: true
+      register: response
+
+    - debug:
+        var: response
+        verbosity: 0 
+
+    # - name: Allocate IMS system definition data sets
+    #   submit_jcl:
+    #       name: DFSALSY2.j2 
+    #       path: '{{ uss_file_path }}'
+    #       script_path: '{{ response.script_path }}'
+
+    - name: Allocate IMS system definition data sets
+      zos_job_submit:
+          src: '{{ uss_file_path }}/DFSALSY2.j2'
+          location: USS
+          wait: true
+
+    - name: Allocate all IMS data sets
+      zos_job_submit:
+          src: '{{ uss_file_path }}/DFSALSY1.j2'
+          location: USS
+          wait: true
+
+    - name: Copy PROCLIB members
+      block:
+        - name: Create temporary directory to store PROCLIB members
+          tempfile:
+            state: directory
+          register: proclib_tmp_dir
+
+        - name: Send PROCLIB member templates to USS directory
+          include_role:
+            name: send-templates
+          vars:
+            template_path: '{{eager_role_path}}/templates/procs/*'
+            uss_file_path: '{{ proclib_tmp_dir.path }}'
+
+        - name: Remove extensions from filenames
+          shell: > 
+            for procname in $(ls *.j2); do
+            basename="$(echo ${procname} | cut -d'.' -f1)";
+            cp ${procname} "//'{{ DFS_AUTH_LIB_HLQ1 }}.{{ DFS_AUTH_LIB_HLQ2 }}.PROCLIB(${basename})'" ;
+            done
+          args:
+            chdir: '{{ proclib_tmp_dir.path }}'
+      always:
+        - name: Delete the temporary PROCLIB files directory
+          file:
+            path: '{{ proclib_tmp_dir.path }}'
+            state: absent 
+
+    - include_role: 
+        name: save-templates-to-datasets
+      vars:
+        datasets: '{{ desired_install_job_save_locations.provision }}'
+
+    - name: Create additional sample procedures
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSPROCB.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+    - name: IMS system definition preprocessor utility
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSGNPRE.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+    - name: Sysdef stage 1
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFS4STG1.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+        max_rc: 2
+
+    - name: Sysdef stage 2
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFS4STG2.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+        max_rc: 2
+
+    - name: RACF security exits for IMS
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSC105J.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+    
+    - name: Auth IMS datasets to z/OS
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSSETPG.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+        max_rc: 12
+      register: response
+
+    - debug:
+        var: response
+        verbosity: 0
+
+  # always:
+  #   - name: Delete the temporary submit_jcl script path
+  #     file:
+  #         path: "{{ response.script_path }}"
+  #         state: absent
+  #     when: response

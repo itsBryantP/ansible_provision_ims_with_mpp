@@ -1,0 +1,55 @@
+{{ JOB_CARD }}
+//*********************************************************************
+//*                                                                   *
+//* <copyright                                                        *
+//*     notice="cics-lm-source"                                       *
+//*     pids="5655-CI1"                                               *
+//*     years="2017"                                                  *
+//*     crc="1408306984" >                                            *
+//*                                                                   *
+//*                                                                   *
+//*     Licensed Materials - Property of IBM                          *
+//*                                                                   *
+//*     5655-CI1                                                      *
+//*                                                                   *
+//*     (C) Copyright IBM Corp. 2017 All Rights Reserved.             *
+//*                                                                   *
+//*     @{[**]copyright.years=2017}                                   *
+//*                                                                   *
+//*                                                                   *
+//*     </copyright>                                                  *
+//*                                                                   *
+//*********************************************************************
+//*******************************************************
+//* Define new zfs
+//*******************************************************
+//DEFINE   EXEC PGM=IDCAMS,REGION=6144K
+//SYSPRINT DD   SYSOUT=*
+//AMSDUMP  DD   SYSOUT=*
+//SYSIN    DD   *
+ DEFINE CLUSTER ( -
+            NAME( -
+            {{ ZCON_FILE_SYSTEM_HLQ }}.{{softwareServiceInstanceName}}) -
+            LINEAR CYL(300 10) SHAREOPTIONS(2) -
+{% if ZCON_ZFS_DATACLASS  and ZCON_ZFS_DATACLASS != '' %}
+      DATACLAS({{ ZCON_ZFS_DATACLASS }}))
+{% else %}
+{% if not DFS_SMS_ENVIRONMENT %}
+      VOLUME({{ ZCON_ZOS_VSAM_VOLUME }}))
+{% else %}
+      )
+{% endif %}
+{% endif %}
+/*
+//*******************************************************
+//* Format new zfs
+//*******************************************************
+//CREATE   EXEC   PGM=IOEAGFMT,REGION=0M,
+// PARM=('-aggregate {{ ZCON_FILE_SYSTEM_HLQ }}.{{softwareServiceInstanceName}} -compat')
+//SYSPRINT DD     SYSOUT=*
+//STDOUT   DD     SYSOUT=*
+//STDERR   DD     SYSOUT=*
+//SYSUDUMP DD     SYSOUT=*
+//CEEDUMP  DD     SYSOUT=*
+//*
+/*

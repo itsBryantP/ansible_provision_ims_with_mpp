@@ -1,0 +1,96 @@
+---
+# tasks file for provision-ims-dbdc
+- name: Provision IMS
+  collections:
+    - ibm.ibm_zos_core
+
+  block:
+
+    - set_fact:
+        eager_role_path: '{{role_path}}'
+
+    # commented out to remove sending template multiple times
+    # - include_role:
+    #     name: send-templates
+    #   vars:
+    #     template_path: '{{ eager_role_path }}/templates/provision/*'
+
+    - block: 
+      #send the start region script only when using the start_ims tag. 
+      - name: Send start region rexx script
+        copy:
+          src: '{{ role_path }}/files/scripts/start-region.rexx'
+          dest: '{{ uss_utilities_path }}/start-region.rexx'
+
+      - shell: chtag -t -c ISO8859-1 start-region.rexx
+        args:  
+          chdir: '{{ uss_utilities_path }}'
+
+      - file: 
+          path: '{{ uss_utilities_path }}/start-region.rexx'
+          state: file
+          mode: a+x
+      
+      - name: Auth IMS datasets to z/OS
+        zos_job_submit:
+          src: '{{ uss_file_path }}/DFSSETPG.j2'
+          location: USS
+          wait: true
+          wait_time_s: 30
+          max_rc: 12
+      tags: [never, start_ims]
+
+      
+    - name: Start SCI 
+      shell: '{{ uss_utilities_path }}/start-region.rexx STARTSCI.j2 {{ DFS_IMS_SSID }}SCI'
+      args:
+        chdir: '{{ uss_file_path }}'
+
+    - name: Start OM 
+      shell: '{{ uss_utilities_path }}/start-region.rexx STARTOM.j2 {{ DFS_IMS_SSID }}OM'
+      args:
+        chdir: '{{ uss_file_path }}'
+
+    - name: Start RM 
+      shell: '{{ uss_utilities_path }}/start-region.rexx STARTRM.j2 {{ DFS_IMS_SSID }}RM'
+      args:
+        chdir: '{{ uss_file_path }}'
+
+    - name: Start IMS control region 
+      shell: '{{ uss_utilities_path }}/start-region.rexx STARTCTL.j2 {{ DFS_IMS_SSID }}CTL'
+      args:
+        chdir: '{{ uss_file_path }}'
+
+    - name: Wait for IMS ready
+      include_role:
+        name: submit-rexx 
+        public: yes
+      vars:
+        rexx_name: 'WaitJob.j2'
+        max_rc: 0
+
+    - name: IMS cold start
+      zos_job_submit:
+        src: '{{ uss_file_path }}/CLDSTART.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+      register: response
+
+    - name: ICON start
+      zos_job_submit:
+        src: '{{ uss_file_path }}/ICONSTRT.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+  # always:
+  #   - name: Delete the temporary submit_jcl script path
+  #     file:
+  #         path: "{{ response.script_path }}"
+  #         state: absent
+  #     when: response
+
+- debug:
+    var: response
+    verbosity: 0

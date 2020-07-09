@@ -1,0 +1,151 @@
+# Where to install MVSUTILS/MVSCMD and other needed tools
+# UTILITIES_PATH: '{{ uss_utilities_path }}'
+
+# Where generated JCL files should be saved on target
+# DATASET_SAVE_PATH: '{{ uss_file_path }}'
+
+# The API key to use for mvsutils artifactory repository 
+API_KEY: ''
+
+PROJECT_NAME: nazare-demo-imsapp
+
+USE_GIT: yes
+
+# Variables for IMS Bank Provisioning
+
+IMSBANK_HLQ1: '{{ DFS_AUTH_LIB_HLQ1 }}'  #IMSBANK.IMS1
+IMSBANK_HLQ2: '{{ DFS_AUTH_LIB_HLQ2 }}'
+IMSBANK_SYSHLQ1: '{{ DFS_AUTH_LIB_SYSHLQ1 }}'
+IMSBANK_SYSHLQ2: '{{ DFS_AUTH_LIB_SYSHLQ2 }}'
+
+IMSPLEX: '{{ DFS_IMSPlex }}' #PLEX1
+ROUTE: '{{ DFS_IMS_SSID }}'
+
+# Variables for specific roles in IMS Bank Provisioning
+# Variables for zCEE deployment
+ZCEE_SERVER: http://tivlp02.svl.ibm.com
+# ZCEE_PORT: 1320
+USERNAME: Fred
+PASSWORD: fredpwd
+ZCEE_BUILD_TOOLKIT_PATH: /u/andyn/bin
+SERVICE_DEPLOY_PATH: /var/zosconnect/ZC01/servers/ZC01/resources/zosconnect/services
+API_DEPLOY_PATH: /var/zosconnect/ZC01/servers/ZC01/resources/zosconnect/apis
+
+
+# Vars for datasets needed to be created/deleted
+datasets:
+ - name: DBD
+   type: pdse
+   size: 5
+   record_format: fb
+   logical_record_length: 80
+ - name: PSB
+   type: pdse
+   size: 5
+   record_format: fb
+   logical_record_length: 80 
+ - name: JCL
+   type: pds
+   size: 5
+   record_format: fb
+   logical_record_length: 80
+# - name: PGMLIB
+#   type: pdse
+#   size: 6
+#   record_format: u
+#   logical_record_length: 0
+ - name: PGMSRC
+   type: pdse
+   size: 5
+   record_format: fb
+   logical_record_length: 80
+ - name: PLIINCL
+   type: pdse
+   size: 5
+   record_format: fb
+   logical_record_length: 80
+ - name: PLISRC
+   type: pdse
+   size: 5
+   record_format: fb
+   logical_record_length: 80
+
+# Vars for copy source from USS to MVS
+uss_datasets:
+  - name: PLI
+  - name: DBD
+  - name: PSB
+  - name: JCL
+  - name: COBOL 
+  - name: LoadData
+
+# Vars for acblib members
+acblib:
+# DBDs
+ - name: ACCOUNT
+ - name: ACCTYPE
+ - name: CUSTACCS
+ - name: CUSTOMER
+ - name: CUSTTYPE
+ - name: HISTORY
+ - name: TSTAT
+ - name: TSTATTYP
+ - name: TTYPE
+# PSBs
+ - name: IB
+ - name: IBACSUM
+ - name: IBGCUDAT
+ - name: IBLOAD
+ - name: IBLOGIN
+ - name: IBLOGOUT
+ - name: IBSCUDAT
+ - name: IBTRAN
+
+dbds:
+ - name: ACCOUNT
+ - name: ACCTYPE
+ - name: CUSTACCS
+ - name: CUSTOMER
+ - name: CUSTTYPE
+ - name: HISTORY
+ - name: TSTAT
+ - name: TSTATTYP
+ - name: TTYPE
+
+psbs:
+ - name: IB
+ - name: IBACSUM
+ - name: IBGCUDAT
+ - name: IBLOAD
+ - name: IBLOGIN
+ - name: IBLOGOUT
+ - name: IBSCUDAT
+ - name: IBTRAN
+
+# Vars file for create-load-input
+loads:
+ - name: ACCOUNT
+   type: seq
+   size: 24000
+   record_format: fb
+   logical_record_length: 200
+ - name: CUSTACCS
+   type: seq
+   size: 24000
+   record_format: fb
+   logical_record_length: 200
+ - name: CUSTOMER
+   type: seq
+   size: 24000
+   record_format: fb
+   logical_record_length: 200
+ - name: HISTORY
+   type: seq
+   size: 24000
+   record_format: fb
+   logical_record_length: 200
+ - name: TSTAT
+   type: seq
+   size: 24000
+   record_format: fb
+   logical_record_length: 200

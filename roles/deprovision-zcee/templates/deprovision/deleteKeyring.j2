@@ -1,0 +1,49 @@
+/* REXX */
+/***********************************************************************/
+/*                                                                     */
+/* <copyright                                                          */
+/*     notice="cics-rm-source"                                         */
+/*     pids="5655-CI1"                                                 */
+/*     years="2017"                                                    */
+/*     crc="3316400273" >                                              */
+/*                                                                     */
+/*                                                                     */
+/*     Licensed Materials - Property of IBM                            */
+/*                                                                     */
+/*     "Restricted Materials of IBM"                                   */
+/*                                                                     */
+/*     5655-CI1                                                        */
+/*                                                                     */
+/*     (C) Copyright IBM Corp. 2017                                    */
+/*                                                                     */
+/*     @{[**]copyright.years=2017}                                     */
+/*                                                                     */
+/*                                                                     */
+/*     </copyright>                                                    */
+/*                                                                     */
+/***********************************************************************/
+/***********************************************************************/
+/*                                                                     */
+/* PLEASE READ                                                         */
+/*                                                                     */
+/* This script contains an example for deleting the dynamic keyring    */
+/* and certificate as part of the deletion of a z/OS Connect server.   */
+/*                                                                     */
+/* By default this script does nothing, as there is an 'exit 0'        */
+/* statement directly under this comment.  Review the keyring and      */
+/* certificate being deleted and remove the 'exit 0' if you wish to    */
+/* use this script.                                                    */
+/*                                                                     */
+/***********************************************************************/
+
+exit 0
+
+/**********************************************************************/
+/* Delete the KEYRING and the certificates                            */
+/**********************************************************************/
+/* Delete keyring */
+"RACDCERT DELRING(zOSConnect.{{softwareServiceInstanceName}})",
+          " ID({{ZCON_ADMIN_SERVER}})"
+/* Delete Certificate */
+"RACDCERT ID(${ZCON_ADMIN_SERVER}) DELETE",
+          " (LABEL('zOSConnect.{{softwareServiceInstanceName}}'))"

@@ -1,0 +1,58 @@
+//ANSIBLE JOB 'testing',
+// NOTIFY=OMVSADM,
+// MSGCLASS=E,
+// MSGLEVEL=(1,1),
+// CLASS=A
+//*********************************************************************
+//*                                                                   *
+//* <copyright                                                        *
+//*     notice="cics-lm-source"                                       *
+//*     pids="5655-CI1"                                               *
+//*     years="2017"                                                  *
+//*     crc="1408306984" >                                            *
+//*                                                                   *
+//*                                                                   *
+//*     Licensed Materials - Property of IBM                          *
+//*                                                                   *
+//*     5655-CI1                                                      *
+//*                                                                   *
+//*     (C) Copyright IBM Corp. 2017 All Rights Reserved.             *
+//*                                                                   *
+//*     @{[**]copyright.years=2017}                                   *
+//*                                                                   *
+//*                                                                   *
+//*     </copyright>                                                  *
+//*                                                                   *
+//*********************************************************************
+//*--------------------------------------------------------------------
+//* Unmount the ZFS
+//*--------------------------------------------------------------------
+//UNMOUNT EXEC PGM=BPXBATCH
+//STDOUT  DD SYSOUT=*
+//STDERR  DD SYSOUT=*
+//STDPARM DD *
+sh
+if [ -d {{ ZCON_ZFS_MOUNTPOINT }}/{{softwareServiceInstanceName}}/PROVISION_OK ];
+then
+/usr/sbin/unmount -o immediate {{ ZCON_ZFS_MOUNTPOINT }}/{{softwareServiceInstanceName}};
+else echo "No mount directory to unmount.";
+fi
+/*
+//*--------------------------------------------------------------------
+//* Sleep for 10 seconds to allow the system to perform unmount
+//*--------------------------------------------------------------------
+//STEPX    EXEC PGM=BPXBATCH,PARM='sh /bin/sleep 10',COND=(4,LT)
+//STDOUT   DD   SYSOUT=*
+//STDERR   DD   SYSOUT=*
+//STDIN    DD   DUMMY
+//*--------------------------------------------------------------------
+//* Delete the ZFS dataset
+//*-------------------------------------------------------------------
+//DELETE    EXEC PGM=IDCAMS,REGION=1M
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD *
+ DELETE {{ ZCON_FILE_SYSTEM_HLQ }}.{{softwareServiceInstanceName}}
+ IF MAXCC EQ 8 THEN DO
+   SET MAXCC = 0
+   END
+/*

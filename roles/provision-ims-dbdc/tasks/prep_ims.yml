@@ -1,0 +1,208 @@
+---
+# tasks file for provision-ims-dbdc
+- name: Provision IMS
+  collections:
+    - ibm.ibm_zos_core
+  block:
+    
+    - set_fact:
+        eager_role_path: '{{role_path}}'
+
+    # commented out to remove sending template multiple times
+    # - include_role:
+    #     name: send-templates
+    #   vars:
+    #     template_path: '{{ eager_role_path }}/templates/provision/*'
+
+    # - name: Define IMS Services to z/OS
+    #   submit_jcl:
+    #     name: DFS4DSVC.j2
+    #     path: '{{ uss_file_path }}'
+    #     script_path: '{{ response.script_path }}'         
+
+    - name: Dynamically allocate IMS system datasets
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSDYNAL.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+      register: response
+
+    - name: Allocate IMS catalog DB
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSALCAT.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+
+    - name: Prep IMS DBRC
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSE314J.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+
+    - name: Add IMS procs
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSE302J.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+    - name: Define IMS subcomponents
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSE303J.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+
+    - name: Define IMS subcomponent CQS
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSE304J.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+    # - name: ims-config-defaults
+    #   submit_jcl:
+    #     name: DFSE305J.j2
+    #     path: '{{ uss_file_path }}'
+    #     script_path: '{{ response.script_path }}'
+
+    - name: Copy procs in IMS PROCLIB
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFS4CPYP.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+    - block:
+        - name: Copy imsjava to target
+          copy:
+            src: '{{ role_path }}/files/java/imsjava.tar'
+            dest: '/u/{{ TARGET_USERNAME }}/imsjava.tar'
+
+            # dest: '{{ uss_file_path }}/imsjava.tar'
+
+        - name: Unarchive templates on target
+          shell: 'tar -Co . -xf imsjava.tar ; rm imsjava.tar'
+          args:
+            chdir: /u/{{ TARGET_USERNAME }}
+
+        # - name: Create unique tempfile used for dfsjvmpr.props
+        #   tempfile:   
+        #     state: file
+        #   register: dfsjvmpr_tmp
+        # - set_fact:
+        #     JAVA_CONF_PATH: '{{ dfsjvmpr_tmp.path }}' 
+
+        - name: Create dfsjvmpr.props for potential JMP regions 
+          shell: echo {{ lookup('template', role_path + '/templates/configs/dfsjvmpr.j2') }} > /u/{{ TARGET_USERNAME }}/dfsjvmpr.props #{{ JAVA_CONF_PATH }}
+      when: DFS_INIT_JAVA_CONF
+
+    - name: Create IEFJOBS members
+      include_role:
+        name: submit-rexx 
+        public: yes
+      vars:
+        rexx_name: 'IEFJOBS.j2'
+        max_rc: 0
+
+    - name: Copy procs to jobs dataset
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSE313J.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+    - name: Copy staging libs
+      zos_job_submit: 
+        src: '{{ uss_file_path }}/DFSCPYST.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+    - name: Prep exits for IMS security and conn
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSE315J.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+
+    - name: Prep ACBLIB step 1
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSAPPGN.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+
+    - name: Prep ACBLIB step 2
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFS4APPG.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+
+    - name: Prep ACBLIB step 3
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFS4SE3.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+
+    - name: Enable IMS OLC
+      zos_job_submit: 
+        src: '{{ uss_file_path }}/DFSENOLC.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+    - name: Establish active libs
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFS4ACTV.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+    - name: Specify DBRC defaults
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSDFDRC.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+    - name: Load IMS catalog
+      zos_job_submit:
+        src: '{{ uss_file_path }}/DFSLDCAT.j2'
+        location: USS
+        wait: true
+        wait_time_s: 30
+
+
+    - name: Send start region rexx script
+      copy:
+        src: '{{ role_path }}/files/scripts/start-region.rexx'
+        dest: '{{ uss_utilities_path }}/start-region.rexx'
+
+    - shell: chtag -t -c ISO8859-1 start-region.rexx
+      args:  
+        chdir: '{{ uss_utilities_path }}'
+
+    - file: 
+        path: '{{ uss_utilities_path }}/start-region.rexx'
+        state: file
+        mode: a+x
+
+  # always:
+  #   - name: Delete the temporary submit_jcl script path
+  #     file:
+  #         path: "{{ response.script_path }}"
+  #         state: absent
+  #     when: response

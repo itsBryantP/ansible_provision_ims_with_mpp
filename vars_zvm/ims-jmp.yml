@@ -1,0 +1,50 @@
+---
+# THIS VARS FILE ASSUMES SOME VARIABLES ARE PREDEFINED
+
+#Administrator account to become when privilege escalation 
+TARGET_ADMIN: '{{ TARGET_USERNAME }}'
+
+## TSO USERID for executing the environment setup
+TSO_USERID: '{{ DFS_IMS_USERID }}'
+
+# this will be appended to the region name, example: IMS1JMP5 where REGION_NUM='5' and DFS_IMS_SSID='IMS1'
+REGION_NUM: 1
+
+## The system eligible to run our jobs, optional
+DFS_IMS_SYSAFF: ''
+
+## High Level Qualifier of the IMS System Lib eg IMSVS.IMSID
+DFS_IMS_LIB_HLQ: '{{ DFS_AUTH_LIB_SYSHLQ1 }}.{{ DFS_AUTH_LIB_SYSHLQ2 }}'
+
+## High level qualifier of the IMS Instance data sets
+DFS_IMS_INST_LIB_HLQ: '{{ DFS_AUTH_LIB_HLQ1 }}.{{ DFS_AUTH_LIB_HLQ2 }}'
+
+## Used to determine if existing members should be replaced
+REPLACE_MEMBERS: yes
+
+
+## z/OS  related 
+ZOS_CSSLIB: '{{ zCloud_CSSLIB }}'
+ZOS_LERUNLIB: '{{ zCloud_LERuntime }}'
+ZOS_MACLIB: '{{ zCloud_MACLIB }}'
+
+
+## IMS application variables 	
+DFS_appname: IMS1BANK
+DFS_traname: IMS1BANK
+DFS_tranclass: '006'
+DFS_tranclass1: '006'
+DFS_tranclass2: '000'
+DFS_tranclass3: '000'
+DFS_tranclass4: '000'
+
+## java variables 
+DFS_jvmpath:  /usr/lpp/java/java180/J8.0 #/usr/lpp/java/J8.0
+DFS_imslibpath: /usr/lpp/ims/ims15/imsjava
+# DFS_classpath: /u/paul/java/target/IMSJavaApp-1.0.jar
+# DFS_workingdir: /u/{{ TARGET_USERNAME }} # declared in global vars
+DFS_db2libpath: /usr/lpp/db2c10/jdbc
+DFS_optionsfilepath: /u/{{ TARGET_USERNAME }} #'{{ JAVA_CONF_PATH }}'
+## Java environment variables for IMS 
+DFS_max_heapsize: 128
+DFS_min_heapsize: 64

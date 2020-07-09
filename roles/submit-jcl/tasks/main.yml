@@ -1,0 +1,16 @@
+---
+# tasks file for submit_jcl
+- name: Submit and delete JCL file
+  shell: "submit -j {{ uss_file_path }}/{{ jcl_name }}"
+  register: command_result
+  failed_when: "'does not exist' not in command_result.stderr and command_result.stdout == '' and command_result.stderr != ''"
+  # always:
+  # - file:
+  #     state: absent
+  #     path: "{{ uss_file_path }}/{{ jcl_name }}"
+  #   when: keep_files is not defined or keep_files == false
+  # - file: 
+  #     state: absent
+  #     path: "{{ DATASET_SAVE_PATH}}/{{ jcl_name | regex_search('(^[^.]*)')}}.j2"
+  #   when: keep_files is not defined or keep_files == false
+  

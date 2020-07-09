@@ -1,0 +1,34 @@
+---
+# tasks file for create-stateful-workflow
+- name: Ensure Requests library on system
+  pip:
+    name: requests
+
+- name: Copy deprovision workflow for current state
+  state_representing_workflow:
+    workflow_name: Deprovision Bank of Z
+    description: 'Deprovision workflow for specific provisioned instance'
+    user_id: '{{ tower_user_id }}'
+    provisioned_instance_name: '{{ provisioned_instance_name }}'
+    tower_username: '{{ tower_username }}'
+    tower_password: '{{ tower_password }}'
+    base_url: '{{ tower_url }}'
+    extra_vars: 
+      DFS_IMS_SSID: '{{ provisioned_instance_name }}'
+  register: response
+
+- name: Add variable to inventory to represent provisioned instance
+  state_representing_inventory:
+    inventory_name: testing inventory vars
+    template_name: '{{ response.workflow_name }}'
+    tower_username: '{{ tower_username }}'
+    tower_password: '{{ tower_password }}'
+    base_url: '{{ tower_url }}'
+    state: present
+    template_type: workflow
+
+- name: Output instance details to console
+  debug:
+    msg: 
+      - "A workflow template has been created to teardown your provisioned instance."
+      - "The workflow name is: {{ response.workflow_name }}"

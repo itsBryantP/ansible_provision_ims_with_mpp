@@ -1,0 +1,12 @@
+{{ JOB_CARD }}
+{% if DFS_IMS_SYSAFF %}
+/*JOBPARM SYSAFF={{ DFS_IMS_SYSAFF }}
+{% endif %}
+//SPOC      EXEC PGM=CSLUSPOC,
+//  PARM=('IMSPLEX={{ DFS_IMSPlex }},ROUTE={{ DFS_IMS_SSID }},WAIT=30,F=WRAP')
+//STEPLIB   DD DISP=SHR,DSN={{ DFS_RESLIB }}
+//SYSPRINT  DD SYSOUT=*
+//SYSIN     DD *
+     QRY PGM NAME({{ DFS_appname }}) SHOW(ALL)
+     QRY TRAN NAME({{ DFS_traname }}) SHOW(ALL)
+/*

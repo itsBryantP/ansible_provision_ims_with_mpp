@@ -1,0 +1,7 @@
+{##!/bin/sh
+
+{% for item in loads %}
+{{ uss_utilities_path }}/drm {{ IMSBANK_HLQ1 }}.{{ IMSBANK_HLQ2 }}.{{ item.name }}.INPUT 2>/dev/null
+{{ uss_utilities_path }}/dtouch -t{{ item.type }} -s{{ item.size }} -r{{ item.record_format }} -l{{ item.logical_record_length }} {{ IMSBANK_HLQ1 }}.{{ IMSBANK_HLQ2 }}.{{ item.name }}.INPUT
+{% endfor %}#}
+

@@ -1,0 +1,34 @@
+---
+# tasks file for install-mvs-utilities
+
+- name: Check if mvsutils already on target
+  stat:
+    path: "{{ uss_utilities_path }}/mvsutils"
+  register: mvsutils_stat_result
+
+- name: Check if mvscmd already on target
+  stat:
+    path: "{{ uss_utilities_path }}/mvscmd"
+  register: mvscmd_stat_result
+
+- name: Copy and unzip MVS utilities
+  block:
+  - name: Copy MVS cmd to Z
+    copy: 
+      src: "./roles/install-mvs-utilities/files/mvscmd_201903141132.pax" 
+      dest: "{{ uss_utilities_path }}/mvscmd.pax"
+
+  - name: Copy MVS utilities to Z
+    copy: 
+      src: "./roles/install-mvs-utilities/files/mvsutil_201904101704.pax" 
+      dest: "{{ uss_utilities_path }}/mvsutil.pax"
+
+  - name: Unzip the files
+    shell: pax -p e -rf mvsutil.pax; pax -p e -rf mvscmd.pax
+    args:
+      chdir: "{{ uss_utilities_path }}/"
+    register: output
+    failed_when: "output.rc > 1 and 'cannot set uid/gid' not in output.stderr"
+
+  when: not (mvsutils_stat_result.stat.exists and mvscmd_stat_result.stat.exists)
+

@@ -1,0 +1,57 @@
+- name: Provision and IMS with a single MPP region
+  hosts: zsystem
+
+  collections:
+    - ibm.ibm_zos_core
+
+  gather_facts: false
+  vars_files:
+    - "{{ vars_folder_name }}/ims-dbdc.yml"
+
+  environment: '{{ system_environment }}'
+  tasks:
+    - name: Create temporary directory to store provisioning files
+      tempfile:
+        state: directory
+      register: provision_tmp_dir
+
+    - block:
+
+        - include_role: 
+            name: install-bzip2
+
+        # Start IMS provisioning
+        - include_role: 
+            name: provision-ims-dbdc
+            tasks_from: create_ims
+          tags:
+          - create_ims
+
+        - include_role: 
+            name: provision-ims-dbdc
+            tasks_from: prep_ims
+          tags:
+          - prep_ims 
+
+        - include_role: 
+            name: provision-ims-dbdc
+            tasks_from: start_ims
+          tags:
+          - start_ims
+
+        
+        # Start IMS MPP provisioning
+        # - name: Load MPP2 specific variables
+        #   include_vars: "{{ playbook_dir }}/{{ vars_folder_name }}/ims-mpp-2.yml"   
+
+        # - include_role:
+        #     name: provision-mpp
+
+
+      always:
+        - name: Delete the temporary provision files directory
+          file:
+            path: "{{ provision_tmp_dir.path }}"
+            state: absent
+      vars:
+        uss_file_path: '{{ provision_tmp_dir.path }}'

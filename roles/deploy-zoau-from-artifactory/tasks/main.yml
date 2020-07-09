@@ -1,0 +1,18 @@
+---
+# tasks file for deploy-zoau-from-artifactory
+- name: Get latest version of zoau
+  get_url:
+    url: https://na.artifactory.swg-devops.com:443/artifactory/sys-dbb-ga-generic-local/ZOAU-1.0.1/GA/zoau-1.0.1.pax
+    dest: '{{ uss_utilities_path }}/{{ zoau_file_name }}.pax'
+    validate_certs: no
+    headers: X-JFrog-Art-Api:{{ api_key }}
+    mode: 0644
+  register: zoau_file_status
+
+
+- name: Unzip the mvsutil archive
+  shell: pax -p e -rf {{ zoau_file_name }}.pax
+  args:
+    executable: '{{ bash }}'
+    chdir: '{{ uss_utilities_path }}/'
+  when: zoau_file_status.changed

@@ -1,0 +1,31 @@
+- name: Create MPP region
+  hosts: zsystem
+  gather_facts: false
+  environment: '{{ system_environment }}'
+
+  tasks:
+    - name: Create temporary directory to store provisioning files
+      tempfile:
+        state: directory
+      register: mpp_tmp_dir
+      
+    - block:
+        - include_role: 
+            name: install-bzip2
+
+        # * Include different variable files depending on environment/inventory used and which MPP being provisioned
+        # ? Is there a better location to handle this import
+        # TODO: put each mpp type in separate roles
+        - name: Load MPP2 specific variables
+          include_vars: "{{ playbook_dir }}/{{ vars_folder_name }}/ims-mpp-2.yml"
+
+        - include_role:
+            name: provision-mpp
+
+      always:
+        - name: Delete the temporary provision files directory
+          file:
+            path: "{{ mpp_tmp_dir.path }}"
+            state: absent
+      vars:
+        uss_file_path: '{{ mpp_tmp_dir.path }}' 

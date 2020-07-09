@@ -1,0 +1,7 @@
+---
+# defaults file for deploy-zoau-from-artifactory
+
+# ZOAU file name with version
+zoau_file_name: zoau-1.0.1
+# Path to bash command
+bash: /usr/lpp/rsusr/ported/bin/bash

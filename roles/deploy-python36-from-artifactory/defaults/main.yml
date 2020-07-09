@@ -1,0 +1,17 @@
+---
+# defaults file for deploy-python36-from-artifactory
+
+# Python information
+python_release_name: python-2017-04-12
+python_release_type: py36
+python_file_name: '{{ python_release_name }}-{{ python_release_type }}'
+
+# The directory we will copy the archive to
+copy_dir: /u/oeusr02/rsusr/ported/python-3.6.1-anaconda-2017-04-12 #/tmp/rsusr/ported/python-3.6.1-anaconda-2017-04-12
+# The directory to unpack the files for install
+install_dir: /u/oeusr01/rsusr/ported/python-3.6.1-anaconda-2017-04-12
+
+# Path to curl command
+curl: /usr/lpp/rsusr/rocket/bin/curl
+# Path to gzip command
+gzip: /usr/lpp/rsusr/rocket/bin/gzip

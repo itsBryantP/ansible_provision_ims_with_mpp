@@ -1,0 +1,66 @@
+{{ JOB_CARD }}
+//*******************************************************************
+//*  DELETE OLD APPLICATION DATASETS
+//*******************************************************************
+//*
+//STEP01    EXEC PGM=IDCAMS              
+//SYSPRINT DD  SYSOUT=*                 
+//SYSOUT   DD  SYSOUT=*                 
+//SYSIN    DD  *
+{% for item in datasets %}                         
+  DELETE {{ IMSBANK_HLQ1 }}.{{ IMSBANK_HLQ2 }}.{{ item.name }}
+{% endfor %}
+//*
+//STEP02    EXEC PGM=IDCAMS              
+//SYSPRINT DD  SYSOUT=*                 
+//SYSOUT   DD  SYSOUT=*                 
+//SYSIN    DD  *
+{% for item in loads %}                         
+  DELETE {{ IMSBANK_HLQ1 }}.{{ IMSBANK_HLQ2 }}.{{ item.name }}.INPUT
+{% endfor %}
+//*
+//STEP03    EXEC PGM=IDCAMS              
+//SYSPRINT DD  SYSOUT=*                 
+//SYSOUT   DD  SYSOUT=*                 
+//SYSIN    DD  *
+{% for item in loads %}                         
+  DELETE {{ IMSBANK_HLQ1 }}.{{ IMSBANK_HLQ2 }}.{{ item.name }}.DB
+{% endfor %}
+//*
+//STEP04    EXEC PGM=IDCAMS              
+//SYSPRINT DD  SYSOUT=*                 
+//SYSOUT   DD  SYSOUT=*                 
+//SYSIN    DD  *
+{% for item in dbds %}
+  DELETE {{ IMSBANK_HLQ1 }}.{{ IMSBANK_HLQ2 }}.ACBLIB({{ item.name }})                         
+  DELETE {{ IMSBANK_HLQ1 }}.{{ IMSBANK_HLQ2 }}.ACBLIBA({{ item.name }})
+  DELETE {{ IMSBANK_HLQ1 }}.{{ IMSBANK_HLQ2 }}.ACBLIBB({{ item.name }})
+  DELETE {{ IMSBANK_HLQ1 }}.{{ IMSBANK_HLQ2 }}.DBDLIB({{ item.name }})
+{% endfor %}
+//*
+//STEP05    EXEC PGM=IDCAMS              
+//SYSPRINT DD  SYSOUT=*                 
+//SYSOUT   DD  SYSOUT=*                 
+//SYSIN    DD  *
+{% for item in psbs %}
+  DELETE {{ IMSBANK_HLQ1 }}.{{ IMSBANK_HLQ2 }}.ACBLIB({{ item.name }})                         
+  DELETE {{ IMSBANK_HLQ1 }}.{{ IMSBANK_HLQ2 }}.ACBLIBA({{ item.name }})
+  DELETE {{ IMSBANK_HLQ1 }}.{{ IMSBANK_HLQ2 }}.ACBLIBB({{ item.name }})
+  DELETE {{ IMSBANK_HLQ1 }}.{{ IMSBANK_HLQ2 }}.PSBLIB({{ item.name }})
+{% endfor %}
+//*
+//STEP06    EXEC PGM=IDCAMS              
+//SYSPRINT DD  SYSOUT=*                 
+//SYSOUT   DD  SYSOUT=*                 
+//SYSIN    DD  *
+{% for item in loads %}                         
+  DELETE {{ IMSBANK_HLQ1 }}.{{ IMSBANK_HLQ2 }}.PGMLIB.*
+{% endfor %}
+//*
+//STEP07    EXEC PGM=IDCAMS              
+//SYSPRINT DD  SYSOUT=*                 
+//SYSOUT   DD  SYSOUT=*                 
+//SYSIN    DD  *                        
+  DELETE {{ IMSBANK_HLQ1 }}.{{ IMSBANK_HLQ2 }}.PLIINCL.*
+  SET MAXCC=0 
+//*

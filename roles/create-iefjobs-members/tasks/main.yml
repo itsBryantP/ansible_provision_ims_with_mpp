@@ -1,0 +1,9 @@
+---
+# tasks file for create-iefjobs-members
+- name:  Step - create-iefjobs-members
+  include_role:
+    name: submit-rexx 
+    public: yes
+  vars:
+    rexx_name: 'IEFJOBS.j2'
+    max_rc: 0

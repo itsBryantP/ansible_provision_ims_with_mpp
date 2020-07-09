@@ -1,0 +1,113 @@
+{{ JOB_CARD }}
+//*********************************************************************
+//*                                                                   *
+//* <copyright                                                        *
+//*     notice="cics-lm-source"                                       *
+//*     pids="5655-CI1"                                               *
+//*     years="2017"                                                  *
+//*     crc="1408306984" >                                            *
+//*                                                                   *
+//*                                                                   *
+//*     Licensed Materials - Property of IBM                          *
+//*                                                                   *
+//*     5655-CI1                                                      *
+//*                                                                   *
+//*     (C) Copyright IBM Corp. 2017 All Rights Reserved.             *
+//*                                                                   *
+//*     @{[**]copyright.years=2017}                                   *
+//*                                                                   *
+//*                                                                   *
+//*     </copyright>                                                  *
+//*                                                                   *
+//*********************************************************************
+//COPY1 EXEC PGM=IEBGENER,MEMLIMIT=0M
+//SYSUT2 DD DISP=SHR,
+//          DSN={{ ZCON_ZOS_PROCLIB }}({{softwareServiceInstanceName}})
+//SYSPRINT DD SYSOUT=*
+//SYSIN  DD *
+//SYSUT1 DD DATA,DLM='@@'
+//{{softwareServiceInstanceName}} PROC PARMS='{{softwareServiceInstanceName}}'
+//*------------------------------------------------------------------
+//* This proc has been created via z/OS Connect cloud provisioning
+//* and will be removed when the server is deprovisioned.
+//*------------------------------------------------------------------
+//*
+//* z/OS Connect Enterprise Edition 3.0.0
+//*
+//* Licensed Materials - Property of IBM
+//*
+//* Restricted Materials of IBM
+//*
+//* 5655-CE3
+//*
+//* (C) Copyright IBM Corp. 2015, 2017
+//*
+//* US Government Users Restricted Rights - Use, duplication or
+//* disclosure restricted by GSA ADP Schedule Contract with
+//* IBM Corp.
+//*------------------------------------------------------------------
+//* This proc may be overwritten by product maintenance.
+//* You must copy to another location before customizing.
+//*------------------------------------------------------------------
+//* PARMS   - server name followed by options e.g. --clean
+//* ZCONHOME- the z/OS UNIX path to the z/OS Connect EE install.
+//*           This path is used to find the product code.
+//*------------------------------------------------------------------
+//* JAVA_HOME must define the z/OS UNIX path up to, but not
+//* including, the "bin" directory. e.g. /usr/lpp/java/J8.0_64
+//* JVM_OPTIONS can be used to specify JVM options.
+//* WLP_USER_DIR define the directory where user's servers are
+//*              stored, but not including the 'servers' directory,
+//*              e.g. /u/userid/zosconnect or /var/zosconnect
+//*------------------------------------------------------------------
+//* Start the Liberty server
+//*
+//* STDOUT  - Destination for stdout (System.out)
+//* STDERR  - Destination for stderr (System.err)
+//* STDENV  - Initial z/OS UNIX environment for the specific
+//*           server being started
+//*
+// SET ZCONHOME='{{ ZCON_INSTALL_DIR }}' 
+//*
+//ZCON     EXEC PGM=BPXBATSL,REGION=0M,MEMLIMIT=4G,
+//         PARM='PGM &ZCONHOME./bin/zosconnect run &PARMS.'
+//STDOUT   DD   SYSOUT=*
+//STDERR   DD   SYSOUT=*
+//STDIN    DD   DUMMY
+//STDENV   DD   *
+_BPX_SHAREAS=YES
+JAVA_HOME={{ JAVA_HOME }}
+WLP_USER_DIR={{ ZCON_ZFS_MOUNTPOINT }}/{{ softwareServiceInstanceName }}
+#JVM_OPTIONS=<Optional JVM parameters>
+//*
+// PEND
+//
+@@
+/*
+## Create the STCJOBS member if required
+{% if ZCON_STC_JOB_CARD and ZCON_STC_JOB_CARD != '' %}
+//COPY2 EXEC PGM=IEBGENER,MEMLIMIT=0M
+//SYSUT2 DD DISP=SHR,
+//          DSN={{ ZCON_ZOS_STCJOBS }}({{ softwareServiceInstanceName }})
+//SYSPRINT DD SYSOUT=*
+//SYSIN  DD *
+//SYSUT1 DD DATA,DLM='@@'
+{% set jobcard = '//{0} '.format(softwareServiceInstanceName) %}
+{% set stc = ZCON_STC_JOB_CARD %}
+{% for parm in stc.split(',') %}
+{% set temp = '//{0} {1},'.format(softwareServiceInstanceName, parm) %}
+{% if temp | length > 70 %}
+{{ jobcard }}
+{% set temp = '//  {0},'.format(parm) %}
+{% endif %}
+{% set jobcard = temp %}
+{% endfor %}
+{{ jobcard.rsplit(',', 1)[0] }}
+//*
+//* Set proc order and then execute z/OS Connect EE
+//*
+//PROCLIB JCLLIB ORDER={{ ZCON_ZOS_PROCLIB }}
+//ZCON    EXEC {{softwareServiceInstanceName}}
+@@
+/*
+{% endif %}

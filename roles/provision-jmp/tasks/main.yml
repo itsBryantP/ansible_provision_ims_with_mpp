@@ -1,0 +1,121 @@
+---
+# tasks file for provision-jmp
+- name: Provision JMP Application 
+  block:
+
+    - name: Determine if JMP region proc member already exists
+      shell: head "//'{{DFS_AUTH_LIB_HLQ1}}.{{DFS_AUTH_LIB_HLQ2}}.IMSJAVA.JOBS({{ DFS_IMS_SSID }}JMP{{ REGION_NUM|string }})'" > /dev/null 2>&1
+      register: check_jmp_member_exists
+      ignore_errors: yes
+
+    # * Need this because Ansible lazily interprets role_path
+    # * Results in wrong paths being sent when passing vars that use role_path var
+    - set_fact:
+        eager_role_path: '{{role_path}}'
+
+    - include_role: 
+        name: send-templates
+      vars:
+        template_path: '{{eager_role_path}}/templates/*'
+        member_exists: '{{ true if check_jmp_member_exists.rc == 0 else false }}'
+
+    - name: Create JCL work data set 
+      submit_jcl:
+        name: CREWORKDS.j2
+        path: '{{ uss_file_path }}'
+        max_rc: 4
+        reuse_script: yes
+      register: response
+
+    # - name: Java dependent region resource adapter set up 
+    #   shell: 'ln -e DFSCLIBU libT2DLI.so'
+    #   args:
+    #     chdir: '{{ DFS_imslibpath }}'
+    #   # become: yes
+    #   # become_user: '{{ TARGET_ADMIN }}'
+    #   # become_method: su
+    #   register: response 
+    #   failed_when: response.rc > 1
+
+    - name: Save JCL to dataset 
+      shell: cp SIMLINK.j2 "//'{{DFS_AUTH_LIB_HLQ1}}.{{DFS_AUTH_LIB_HLQ2}}.IMSJAVA.JOBS(SIMLINK)'"
+      args:
+        chdir: '{{ uss_file_path }}'
+
+
+    - name: Create the Java Message Processing (JMP) Region 
+      submit_jcl:
+        name: IMDOJMP.j2
+        path: '{{ uss_file_path }}'
+        max_rc: 4
+        script_path: '{{ response.script_path }}'
+
+    - name: Save JCL to dataset 
+      shell: cp IMDOJMP.j2 "//'{{DFS_AUTH_LIB_HLQ1}}.{{DFS_AUTH_LIB_HLQ2}}.IMSJAVA.JOBS(STARTJMP)'"
+      args:
+        chdir: '{{ uss_file_path }}'
+
+    - name: Specify the Java Virtual Machine (JVM) environment settings
+      submit_jcl:
+        name: CREDFSJVMEV.j2
+        path: '{{ uss_file_path }}'
+        max_rc: 4
+        script_path: '{{ response.script_path }}'
+
+    - name: Save JCL to dataset 
+      shell: cp CREDFSJVMEV.j2 "//'{{DFS_AUTH_LIB_HLQ1}}.{{DFS_AUTH_LIB_HLQ2}}.IMSJAVA.JOBS(DFSJVMEV)'"
+      args:
+        chdir: '{{ uss_file_path }}'
+
+    - name: Set the Java library classpath in IMS
+      submit_jcl:
+        name: CREDFSJVMMS.j2
+        path: '{{ uss_file_path }}'
+        max_rc: 4
+        script_path: '{{ response.script_path }}'
+
+    - name: Save JCL to dataset 
+      shell: cp CREDFSJVMMS.j2 "//'{{DFS_AUTH_LIB_HLQ1}}.{{DFS_AUTH_LIB_HLQ2}}.IMSJAVA.JOBS(DFSJVMMS)'"
+      args:
+        chdir: '{{ uss_file_path }}'
+
+    - name: Map PSB name to the Java application
+      submit_jcl:
+        name: CREDFSJVMAP.j2
+        path: '{{ uss_file_path }}'
+        max_rc: 4
+        script_path: '{{ response.script_path }}'
+
+    - name: Save JCL to dataset 
+      shell: cp CREDFSJVMAP.j2 "//'{{DFS_AUTH_LIB_HLQ1}}.{{DFS_AUTH_LIB_HLQ2}}.IMSJAVA.JOBS(DFSJVMAP)'"
+      args:
+        chdir: '{{ uss_file_path }}'
+
+    - name: Verify SPOC up
+      submit_jcl:
+        name: VERIFYSPOC.j2
+        path: '{{ uss_file_path }}'
+        script_path: '{{ response.script_path }}'
+
+    - name: Save JCL to dataset 
+      shell: cp STOPJMP.j2 "//'{{DFS_AUTH_LIB_HLQ1}}.{{DFS_AUTH_LIB_HLQ2}}.IMSJAVA.JOBS(STOPJMP)'"
+      args:
+        chdir: '{{ uss_file_path }}'
+
+    - name: Start region
+      submit_jcl:
+        name: STARTJMP.j2
+        path: '{{ uss_file_path }}'
+        script_path: '{{ response.script_path }}'
+
+    - name: Save JCL to dataset 
+      shell: cp STARTJMP.j2 "//'{{DFS_AUTH_LIB_HLQ1}}.{{DFS_AUTH_LIB_HLQ2}}.IMSJAVA.JOBS(STARTJMP)'"
+      args:
+        chdir: '{{ uss_file_path }}'
+  
+  always:
+    - name: Delete the temporary submit_jcl script path
+      file:
+        path: "{{ response.script_path }}"
+        state: absent
+      when: response
