@@ -78,7 +78,7 @@ TCPIP_PROFILE: USER.PARMLIB(TCPPROF2)
 # ---------------------------------------------------------------------------- #
 
 # The z/OS username to use for job submission
-TARGET_USERNAME: bbecker
+TARGET_USERNAME: ansuser
 
 # JOB_CARD will be the default job card inserted for dynamically generated JCL
 # ensure MSGCLASS and CLASS are correct for desired environment
@@ -107,7 +107,7 @@ api_key: ''
 DFS_IMS_USERID: '{{ TARGET_USERNAME | upper }}'
 
 # The SSID for the IMS to be provisioned
-DFS_IMS_SSID: IMS1
+DFS_IMS_SSID: IMS2
 
 # ---------------------------------------------------------------------------- #
 # The first HLQ to be used to store IMS related datasets
@@ -160,7 +160,7 @@ DFS_DS_VOLUME2: W68002
 # ---------------------------------------------------------------------------- #
 
 # IMSPlex name
-DFS_IMSPlex: PLEX2
+DFS_IMSPlex: PLEX3
 
 # The language environment runtime dataset to use
 zCloud_LERuntime: CEE.SCEERUN
