@@ -1,3 +1,15 @@
+# - name: perform firewall auth if running against the native system inventory
+#   hosts: zsystem
+#   gather_facts: false
+#   vars_files:
+#     - "{{ vars_folder_name }}/ims-dbdc.yml"
+
+#   environment: '{{ system_environment }}'
+
+# - name: firewall auth
+#   import_playbook: authenticate-with-firewall.yml
+#   when: "'native' in inventory_hostname"
+
 - name: Provision and IMS with a single MPP region
   hosts: zsystem
 
@@ -9,6 +21,7 @@
     - "{{ vars_folder_name }}/ims-dbdc.yml"
 
   environment: '{{ system_environment }}'
+  
   tasks:
     - name: Create temporary directory to store provisioning files
       tempfile:
