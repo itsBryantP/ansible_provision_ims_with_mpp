@@ -1,51 +1,23 @@
-
-# the root directory in which Rocker Software tools like bash are stored, if /usr/lpp/rsusr/ported is TOOLS_ROOT, /usr/lpp/rsusr/ported/bin holds bash, curl, etc
-TOOLS_ROOT: /usr/lpp/rsusr/ported
-
-# path leading to binaries that may be needed example: /hsstools/bin
-TOOLS_PATH: '{{TOOLS_ROOT}}/bin'
-
 # The path to the root of the python installation 
-PYTHON_ROOT: /usr/lpp/rsusr/python27/python-2017-04-12-py27/python27
+PYZ: /python/v3.8.0-ga/usr/lpp/IBM/cyp/v3r8/pyz
 
 # system_environment holds any environment variable names and values that should be set
 # on target host during playbook
 # path leading to binaries that may be needed example: /hsstools/bin
-ZOAU_ROOT: /u/omvsadm/
-PYTHON_INSTALL_DIR: /usr/lpp/izoda/v110/anaconda
+ZOAU: /python/v3.8.0-ga/zoau/1.0.3
+
 system_environment:
-  MANPATH: /usr/man/%L
-  FFI_LIB: '{{ PYTHON_INSTALL_DIR }}/lib/ffi'
-  RELEASE_NAME: python-2017-04-12
-  CURL_CA_BUNDLE: '{{ PYTHON_INSTALL_DIR }}/etc/ssl/cacert.pem'
-  RELEASE_DIR: /usr/lpp/rsusr/python27/python-2017-04-12-py27
-  RELEASE_TYPE: py27
-  LIBPATH: '{{ PYTHON_INSTALL_DIR }}/lib:{{ ZOAU_ROOT }}/lib:/lib:/usr/lib:.'
-  NLSPATH: /usr/lib/nls/msg/%L/%N
-  MAIL: /usr/mail/OMVSADM
-  _: /bin/env
   STEPLIB: 'none'
-  TERMINFO: '{{ PYTHON_INSTALL_DIR }}/share/terminfo'
-  # PYTHON_ENV: python27
-  ZOAU_ROOT: '{{ ZOAU_ROOT }}'
-  ZOAUTIL_DIR: '{{ ZOAU_ROOT }}'
-  PYTHONPATH: '{{ PYTHON_INSTALL_DIR }}/lib:{{ ZOAU_ROOT }}/lib:/lib:/usr/lib'
-  PKG_CONFIG_PATH: '{{ PYTHON_INSTALL_DIR }}/lib/pkgconfig:{{ PYTHON_INSTALL_DIR }}/share/pkgconfig'
-  PYTHON_HOME: '{{ PYTHON_INSTALL_DIR }}'
-  _BPXK_JOBLOG: STDERR 
-  # environment variables for mvsutils/mvscmd
-  _BPXK_AUTOCVT: ON
-  _CEE_RUNOPTS: 'FILETAG(AUTOCVT,AUTOTAG) POSIX(ON)'
-  _TAG_REDIR_ERR: txt
-  _TAG_REDIR_IN: txt
-  _TAG_REDIR_OUT: txt
-  TOOLS_ROOT: '{{ TOOLS_ROOT }}'
-  GIT_SHELL: '{{ TOOLS_ROOT }}/bin/bash'
-  GIT_EXEC_PATH: '{{ TOOLS_ROOT }}/libexec/git-core'
-  GIT_TEMPLATE_DIR: '{{ TOOLS_ROOT }}/share/git-core/templates'
-  PATH: '{{ZOAU_ROOT}}/bin:/usr/lpp/rsusr/ported/bin:/bin:/var/bin:/usr/lpp/java/J8.0/bin:{{ PYTHON_INSTALL_DIR }}/bin'
-  # Java environment
-  JAVA_HOME: /usr/lpp/java/java180/J8.0_64
+  _BPXK_AUTOCVT: "ON"
+  ZOAU_HOME: "{{ ZOAU }}"
+  PYTHONPATH: "{{ ZOAU }}/lib"
+  LIBPATH: "{{ ZOAU }}/lib:{{ PYZ }}/lib:/lib:/usr/lib:."
+  PATH: "{{ ZOAU }}/bin:{{ PYZ }}/bin:/bin:/var/bin:/usr/lpp/java/J8.0/bin"
+  _CEE_RUNOPTS: "FILETAG(AUTOCVT,AUTOTAG) POSIX(ON)"
+  _TAG_REDIR_ERR: "txt"
+  _TAG_REDIR_IN: "txt"
+  _TAG_REDIR_OUT: "txt"
+  LANG: "C"
 
 # vars_folder_name is the name of the folder at the root of the project
 # which contains variable files to be imported by various playbooks
@@ -121,7 +93,7 @@ DFS_IMS_SSID: IMS1
 # The first HLQ to be used to store IMS related datasets
 # these include procs, OLDS, WADS, PROCLIB, JOBS, and application 
 # specific datasets
-DFS_AUTH_LIB_HLQ1: BANKIMS        
+DFS_AUTH_LIB_HLQ1: IMSTESTL        
 # The second HLQ to be used to store IMS related datasets
 # these include procs, OLDS, WADS, PROCLIB, JOBS, and application 
 # specific datasets
@@ -166,9 +138,9 @@ DFS_SMS_MCLASS: NONE
 
 # first volume to use to store IMS datasets
 
-DFS_DS_VOLUME1: DIPTI1
+DFS_DS_VOLUME1: MOBIL4
 # second volume to use to store IMS datasets
-DFS_DS_VOLUME2: DIPTI1
+DFS_DS_VOLUME2: MOBIL4
 
 # ---------------------------------------------------------------------------- #
 
