@@ -39,7 +39,7 @@ JOB_CARD: |-
   //  CLASS=A
 
 # The username that will be used to establish SSH connection to target 
-TARGET_USERNAME: bbecker
+TARGET_USERNAME: ansuser
 
 # Where to install MVSUTILS/MVSCMD and other needed tools/scripts
 uss_utilities_path: /u/{{ TARGET_USERNAME }}
