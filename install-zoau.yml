@@ -1,8 +1,0 @@
-- name: Downloads and installs ZOAU from artifactory
-  hosts: zsystem
-  environment: '{{ system_environment }}'
-
-
-  tasks:
-    - include_role:
-        name: deploy-zoau-from-artifactory
