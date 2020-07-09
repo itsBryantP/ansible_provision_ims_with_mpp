@@ -26,6 +26,6 @@
           file:
               path: "{{ deprovision_tmp_dir.path }}"
               state: absent
-          when: response
+          #when: response
       vars:
         uss_file_path: '{{ deprovision_tmp_dir.path }}' 
