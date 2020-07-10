@@ -1,4 +1,4 @@
-- name: Deprovision IMS DB/DC
+- name: Deprovision IMS TM/DB
   hosts: zsystem
   gather_facts: false
   # * Include different variable files depending on environment/inventory used
