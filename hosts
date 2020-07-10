@@ -1,9 +1,0 @@
-zsystem:
-  hosts:
-    ec33021a.vmec.svl.ibm.com:
-      ansible_user: "omvsadm"
-      ansible_python_interpreter: "/var/python27/python27/bin/python"
-
-
-
-
