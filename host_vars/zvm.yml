@@ -3,7 +3,6 @@ PYZ: /python/v3.8.0-ga/usr/lpp/IBM/cyp/v3r8/pyz
 
 # system_environment holds any environment variable names and values that should be set
 # on target host during playbook
-# path leading to binaries that may be needed example: /hsstools/bin
 ZOAU: /python/v3.8.0-ga/zoau/1.0.3
 
 system_environment:
@@ -137,7 +136,6 @@ DFS_SMS_MCLASS: NONE
 # ------------------------ for when SMS is not in use ------------------------ #
 
 # first volume to use to store IMS datasets
-
 DFS_DS_VOLUME1: MOBIL4
 # second volume to use to store IMS datasets
 DFS_DS_VOLUME2: MOBIL4
