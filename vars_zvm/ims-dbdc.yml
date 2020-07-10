@@ -5,7 +5,7 @@
 # These next values are only used for deprovisioning
 # need to create jmps and mpps using separate playbooks
 HAS_MPPS: yes
-NUM_OF_MPPS: 0
+NUM_OF_MPPS: 1
 HAS_JMPS: no
 NUM_OF_JMPS: 0
 DFS_INIT_JAVA_CONF: true
